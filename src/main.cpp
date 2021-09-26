@@ -30,16 +30,20 @@ struct Person{
     double salary;
 }persons[MAX_COUNT_PERSONS]; //массив из максимального количества работников
 
+//структура списка
 struct List{
     Person* person;
     List* next;
 } *list = NULL;
 
+//структура дерева
 struct Tree{
     Person* person;
     Tree* left, * right;
 } *tree = NULL;
 
+
+//рекурсивная функция добавления элемента в дерево
 void push_to_tree(Person* person, Tree** position){
     if(!*position){
         *position = new Tree{person, NULL, NULL};
