@@ -34,14 +34,14 @@ void quicksort(int left, int right, Person it[]){
     int i = left, j = right;
     Person x=it[(left+ right)/2];
     do{
-       while(strcmp(it[i].surname, x.surname) < 0) ++i;
-       while(strcmp(x.surname, it[j].surname) < 0) --j;
-       if(i <=j){
-           Person y = it[i];
-           it[i] = it[j];
-           it[j] = y;
-           ++i; --j;
-       }
+        while(strcmp(it[i].surname, x.surname) < 0) ++i;
+        while(strcmp(x.surname, it[j].surname) < 0) --j;
+        if(i <=j){
+            Person y = it[i];
+            it[i] = it[j];
+            it[j] = y;
+            ++i; --j;
+        }
     }while(i <=j);
     if(left < j) quicksort(left, j, it);
     if(i < right) quicksort(i, right, it);
