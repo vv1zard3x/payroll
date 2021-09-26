@@ -30,6 +30,42 @@ struct Person{
     double salary;
 }persons[MAX_COUNT_PERSONS]; //массив из максимального количества работников
 
+void quicksort(int left, int right, Person it[]){
+    int i = left, j = right;
+    Person x=it[(left+ right)/2];
+    do{
+       while(strcmp(it[i].surname, x.surname) < 0) ++i;
+       while(strcmp(x.surname, it[j].surname) < 0) --j;
+       if(i <=j){
+           Person y = it[i];
+           it[i] = it[j];
+           it[j] = y;
+           ++i; --j;
+       }
+    }while(i <=j);
+    if(left < j) quicksort(left, j, it);
+    if(i < right) quicksort(i, right, it);
+}
+
+Person* binary_search(const char* surname){
+    int middle, left = 0, right = COUNT_PERSONS - 1;
+    while(true){
+        middle = (left + right) / 2;
+        if(strcmp(surname, persons[middle].surname) < 0){
+            right = middle - 1;
+        }
+        else if(strcmp(surname, persons[middle].surname) > 0){
+            left = middle + 1;
+        }
+        else{
+            return &persons[middle];
+        }
+        
+        if(left > right){
+            return NULL;
+        }
+    }
+}
 
 //функция чтения файла (возвращает количество прочитанных работников)
 int read_file(const char* name){
@@ -46,6 +82,7 @@ int read_file(const char* name){
             COUNT_PERSONS++;
     }
     fclose(in);//закрываем файл
+    quicksort(0, COUNT_PERSONS-1, persons);
     return COUNT_PERSONS;
 }
 
@@ -95,6 +132,7 @@ bool add_person(){
         printf("Зарплата (руб/час): ");
         scanf("%lf", &persons[COUNT_PERSONS].salary);
         ++COUNT_PERSONS;
+        quicksort(0, COUNT_PERSONS-1, persons);
     }
     return true;
 }
@@ -199,7 +237,8 @@ void print_menu(){
     printf("1. Показать всех сотрудников\n");
     printf("2. Найти сотрудника\n");
     printf("3. Добавить сотрудника\n");
-    printf("4. Выйти\n");
+    printf("4. Бинарный поиск по фамилии\n");
+    printf("5. Выйти\n");
 }
 
 bool menu(){
@@ -224,6 +263,14 @@ bool menu(){
             add_person();
             break;
         case '4':
+            clear;
+            char surname[100];
+            printf("Введите фамилию (соблюдая регистр): ");
+            gets(surname);
+            report(binary_search(surname));
+            getchar();
+            break;
+        case '5':
             clear;
             return false;
             break;
