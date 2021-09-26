@@ -33,17 +33,19 @@ struct Person{
 
 //функция чтения файла (возвращает количество прочитанных работников)
 int read_file(const char* name){
-    FILE* in = NULL;
+    FILE* in = NULL; //создаем указатель на файл
     COUNT_PERSONS = 0;
-    in = fopen(name, "r+b");
+    in = fopen(name, "r+b");//открываем файл
     if(!in){
         return 0;
     }
+    
+    //читаем все записи из файла
     while(!feof(in)){
         if(fread(&persons[COUNT_PERSONS], sizeof(Person), 1, in))
             COUNT_PERSONS++;
     }
-    fclose(in);
+    fclose(in);//закрываем файл
     return COUNT_PERSONS;
 }
 
@@ -52,8 +54,10 @@ void save_file(const char* name){
     FILE* out = NULL;
     out = fopen(name, "w+b");
     if(!out){
-        throw ERROR_SAVE_FILE;
+        throw ERROR_SAVE_FILE;//если не удалось открыть файл для записи, выбрасываем ошибку
     }
+    
+    //иначе записываем все данные из массива в файл
     for (int i = 0; i < COUNT_PERSONS; ++i) {
         fwrite(&persons[i], sizeof(Person), 1, out);
     }
@@ -67,7 +71,7 @@ bool add_person(){
         return false;
     }
     else{
-        fflush(stdout);
+        fflush(stdout);//это значит очистить буфер
         getchar();
         printf("Имя: ");
         gets(persons[COUNT_PERSONS].name);
@@ -136,6 +140,7 @@ void show_all_persons(){
     printf("Общие пенсионные отчисления: %.2lf\n", all_pension);
 }
 
+//функция ищет работника по ФИО и возвращает указатель на него
 Person* find(const char* surname, const char* n, const char* p){
     for (int i = 0; i < COUNT_PERSONS; ++i) {
         if(!strcmp(persons[i].surname, surname)){
@@ -144,14 +149,17 @@ Person* find(const char* surname, const char* n, const char* p){
             }
         }
     }
+    return NULL;
 }
 
+//функция ищет работника по номеру и возвращает указатель на него
 Person* find(const char* personnel_number){
     for (int i = 0; i < COUNT_PERSONS; ++i) {
         if(!strcmp(persons[i].personnel_number, personnel_number)){
             return &persons[i];
         }
     }
+    return NULL;
 }
 
 void show_definite_person(){
