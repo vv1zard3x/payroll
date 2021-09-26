@@ -4,14 +4,14 @@
 #include <stdio.h> //подключение стандартной библиотеки ввода/вывода
 #include <string.h> //подключение бибилиотеки для работы со строками
 
-#define FILE_NAME "data" //имя открываемого файла (указывать в кавычках)
-#define MAX_COUNT_PERSONS 100 //максимально возможное количество работников
-#define TAX 0.12 //подоходный налог
-#define PENSION 0.01 //пенсионные отчисления
-#define MINIMUM_WAGE 10000 //Минимальный размер оплаты труда
-#define MINIMUM_DEPENDENT_WAGE 7000 //минимальный размер оплаты труда для инждевенцев
+const char* FILE_NAME = "data"; //имя открываемого файла (указывать в кавычках)
+const int MAX_COUNT_PERSONS  = 100; //максимально возможное количество работников
+const double TAX = 0.12; //подоходный налог
+const double PENSION = 0.01; //пенсионные отчисления
+const double MINIMUM_WAGE = 10000; //Минимальный размер оплаты труда
+const double MINIMUM_DEPENDENT_WAGE = 7000; //минимальный размер оплаты труда для инждевенцев
 
-#define ERROR_SAVE_FILE "Ошибка чтения файла"
+const char* ERROR_SAVE_FILE = "Ошибка чтения файла";
 
 #define clear system("clear")
 
@@ -30,6 +30,45 @@ struct Person{
     double salary;
 }persons[MAX_COUNT_PERSONS]; //массив из максимального количества работников
 
+struct List{
+    Person* person;
+    List* next;
+} *list = NULL;
+
+void push_to_list(Person *person){
+    List* current = list, *buffer = NULL, *previous = NULL;
+    if(!list){
+        list = new List{person, NULL};
+    }
+    else{
+        bool ready = false;
+        while(current != NULL){
+            if(person->hours_worked + person->overtime_worked >=
+               current->person->overtime_worked + current->person->hours_worked){
+                buffer = new List{person, current};
+                if(!previous){
+                    list = buffer;
+                }
+                else{
+                    previous->next = buffer;
+                }
+                return;
+            }
+            else{
+                
+            }
+            previous = current;
+            current = current->next;
+            
+        }
+        if(current == NULL){
+            current = new List{person, NULL};
+            if(previous){
+                previous->next = current;
+            }
+        }
+    }
+}
 
 //функция чтения файла (возвращает количество прочитанных работников)
 int read_file(const char* name){
@@ -42,8 +81,10 @@ int read_file(const char* name){
     
     //читаем все записи из файла
     while(!feof(in)){
-        if(fread(&persons[COUNT_PERSONS], sizeof(Person), 1, in))
+        if(fread(&persons[COUNT_PERSONS], sizeof(Person), 1, in)){
+            push_to_list(&persons[COUNT_PERSONS]);
             COUNT_PERSONS++;
+        }
     }
     fclose(in);//закрываем файл
     return COUNT_PERSONS;
@@ -94,6 +135,7 @@ bool add_person(){
         !strcmp(dependent, "yes") ? persons[COUNT_PERSONS].dependent = true : persons[COUNT_PERSONS].dependent = false;
         printf("Зарплата (руб/час): ");
         scanf("%lf", &persons[COUNT_PERSONS].salary);
+        push_to_list(&persons[COUNT_PERSONS]);
         ++COUNT_PERSONS;
     }
     return true;
@@ -105,15 +147,15 @@ void report(const Person* person){
     }
     else{
         double total_salary, pension, tax;
-        printf("ФИО: %s %s %s\n",
+        printf("ФИО:                           %s %s %s\n",
                person->surname,
                person->name,
                person->patronymic);
-        printf("Персональный номер: %s\n", person->personnel_number);
+        printf("Персональный номер:            %s\n", person->personnel_number);
         printf("Количество отработанных часов: %.2lf\n", person->hours_worked);
         printf("Количество cверхурочных часов: %.2lf\n", person->overtime_worked);
-        printf("Иждевенец: %s\n", person->dependent ? "да" : "нет");
-        printf("Зарплата (руб/час): %.2lf\n", person->salary);
+        printf("Иждевенец:                     %s\n", person->dependent ? "да" : "нет");
+        printf("Зарплата (руб/час):            %.2lf\n", person->salary);
         total_salary = person->salary *( person->hours_worked + 1.5 * person->overtime_worked);
         pension = total_salary * PENSION;
         if(person->dependent){
@@ -122,10 +164,10 @@ void report(const Person* person){
         else{
             tax = (total_salary - MINIMUM_WAGE) * TAX ;
         }
-        printf("Пенсионное отчисление: %.2lf\n", pension);
-        printf("Подоходный налог : %.2lf\n", tax > 0 ? tax : 0.0);
+        printf("Пенсионное отчисление:         %.2lf\n", pension);
+        printf("Подоходный налог :             %.2lf\n", tax > 0 ? tax : 0.0);
         all_tax += tax; all_pension += pension;
-        printf("Итоговая зарплата: %.2lf\n", total_salary - tax - pension);
+        printf("Итоговая зарплата:             %.2lf\n", total_salary - tax - pension);
     }
 }
 
@@ -160,6 +202,24 @@ Person* find(const char* personnel_number){
         }
     }
     return NULL;
+}
+
+void show_list(bool (*comp)(Person*) = NULL){
+    List* current = list;
+    while(current != NULL){
+        printf("-----------------------------------------------------\n");
+        if(comp){
+            if(comp(current->person)){
+                report(current->person);
+            }
+        }
+        else{
+            report(current->person);
+        }
+        printf("-----------------------------------------------------\n");
+        current = current->next;
+    }
+    getchar();
 }
 
 void show_definite_person(){
@@ -199,7 +259,10 @@ void print_menu(){
     printf("1. Показать всех сотрудников\n");
     printf("2. Найти сотрудника\n");
     printf("3. Добавить сотрудника\n");
-    printf("4. Выйти\n");
+    printf("4. Показать весь линейный список\n");
+    printf("5. Показать тех, кто отработал больше нормы\n");
+    printf("6. Показать бинарное дерево\n");
+    printf("7. Выйти\n");
 }
 
 bool menu(){
@@ -225,6 +288,19 @@ bool menu(){
             break;
         case '4':
             clear;
+            show_list();
+            break;
+        case '5':
+            clear;
+            show_list([](Person* p)->bool{
+                return p->overtime_worked;
+            });
+            break;
+        case '6':
+            clear;
+            break;
+        case '7':
+            clear;
             return false;
             break;
         default:
@@ -237,6 +313,7 @@ bool menu(){
 int main(){
     setlocale(LC_ALL, "ru");
     try {
+        list = NULL;
         read_file(FILE_NAME);
         while (menu());
         save_file(FILE_NAME);
