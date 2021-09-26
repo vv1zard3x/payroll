@@ -35,10 +35,29 @@ struct List{
     List* next;
 } *list = NULL;
 
+struct Tree{
+    Person* person;
+    Tree* left, * right;
+} *tree = NULL;
+
+void push_to_tree(Person* person, Tree** position){
+    if(!*position){
+        *position = new Tree{person, NULL, NULL};
+        return;
+    }
+    if(person->overtime_worked && person->overtime_worked > (*position)->person->overtime_worked){
+        push_to_tree(person, &(*position)->left);
+    }
+    else if(person->overtime_worked){
+        push_to_tree(person, &(*position)->right);
+    }
+}
+
 void push_to_list(Person *person){
     List* current = list, *buffer = NULL, *previous = NULL;
     if(!list){
         list = new List{person, NULL};
+        return;
     }
     else{
         bool ready = false;
@@ -83,6 +102,7 @@ int read_file(const char* name){
     while(!feof(in)){
         if(fread(&persons[COUNT_PERSONS], sizeof(Person), 1, in)){
             push_to_list(&persons[COUNT_PERSONS]);
+            push_to_tree(&persons[COUNT_PERSONS], &tree);
             COUNT_PERSONS++;
         }
     }
@@ -136,6 +156,7 @@ bool add_person(){
         printf("Зарплата (руб/час): ");
         scanf("%lf", &persons[COUNT_PERSONS].salary);
         push_to_list(&persons[COUNT_PERSONS]);
+        push_to_tree(&persons[COUNT_PERSONS], &tree);
         ++COUNT_PERSONS;
     }
     return true;
@@ -183,11 +204,11 @@ void show_all_persons(){
 }
 
 //функция ищет работника по ФИО и возвращает указатель на него
-Person* find(const char* surname, const char* n, const char* p){
+void find(const char* surname, const char* n, const char* p){
     for (int i = 0; i < COUNT_PERSONS; ++i) {
         if(!strcmp(persons[i].surname, surname)){
             if(!strncmp(persons[i].name, n, 1) && !strncmp(persons[i].patronymic, p, 1)){
-                return &persons[i];
+                report( &persons[i]);
             }
         }
     }
@@ -195,10 +216,10 @@ Person* find(const char* surname, const char* n, const char* p){
 }
 
 //функция ищет работника по номеру и возвращает указатель на него
-Person* find(const char* personnel_number){
+void find(const char* personnel_number){
     for (int i = 0; i < COUNT_PERSONS; ++i) {
         if(!strcmp(persons[i].personnel_number, personnel_number)){
-            return &persons[i];
+            report( &persons[i]);
         }
     }
     return NULL;
@@ -222,6 +243,22 @@ void show_list(bool (*comp)(Person*) = NULL){
     getchar();
 }
 
+void show_tree(Tree* tree){
+    if(!tree)
+        return;
+    if(tree->left){
+        show_tree(tree->left);
+    }
+    if(tree->right){
+        show_tree(tree->right);
+    }
+    if(tree->person){
+        printf("-----------------------------------------------------\n");
+        report(tree->person);
+        printf("-----------------------------------------------------\n");
+    }
+}
+
 void show_definite_person(){
     char request[100], surname[100], n[2], p[2];
     while(true){
@@ -236,7 +273,7 @@ void show_definite_person(){
             case '1':
                 printf("Персональный номер : ");
                 gets(request);
-                report(find(request));
+                find(request);
                 printf("Нажмите Enter, чтобы продолжить\n");
                 getchar();
                 return;
@@ -244,7 +281,7 @@ void show_definite_person(){
             case '2':
                 printf("Фамилия и инициалы в формате \"Иванов И И\" (без точек через пробелы): ");
                 scanf("%s %s %s", surname, n, p);
-                report(find(surname, n, p));
+                find(surname, n, p);
                 printf("Нажмите Enter, чтобы продолжить\n");
                 getchar();
                 return;
@@ -298,6 +335,8 @@ bool menu(){
             break;
         case '6':
             clear;
+            show_tree(tree);
+            getchar();
             break;
         case '7':
             clear;
