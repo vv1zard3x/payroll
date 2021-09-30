@@ -7,7 +7,7 @@
 /*########################################################################################*/
 #define clear system("clear")
 
-const std::string FILE_NAME = "data";          //имя открываемого файла (указывать в кавычках)
+const std::string FILE_NAME = "data1";          //имя открываемого файла (указывать в кавычках)
 const double TAX = 0.12;                        //подоходный налог (коэффициент)
 const double PENSION = 0.01;                    //пенсионные отчисления (коэффициент)
 const int MINIMUM_WAGE = 10000;                 //Минимальный размер оплаты труда
@@ -32,6 +32,9 @@ std::vector<Person>::iterator find(std::vector<Person>& persons, std::string& nu
 void show_definite_person(std::vector<Person>& persons);
 void print_menu();
 bool menu(std::vector<Person>& persons);
+void qs(int left, int right, std::vector<Person>& persons);
+void quicksort(std::vector<Person>& persons);
+std::vector<Person>::iterator binary_search(std::vector<Person>& persons, Person& person);
 /*########################################################################################*/
 /*########################################################################################*/
 
@@ -102,6 +105,7 @@ void Person::report() const{
     printf("Подоходный налог : %.2lf\n", this->tax > 0 ? this->tax : 0.0);
     printf("Итоговая зарплата: %.2lf\n", total_salary );
 }
+
 /*########################################################################################*/
 /*########################################################################################*/
 
@@ -130,6 +134,7 @@ bool menu(std::vector<Person>& persons){
         case '3':
             clear;
             add_person(persons);
+            std::cin.ignore();
             break;
         case '4':
             clear;
@@ -199,11 +204,10 @@ void show_definite_person(std::vector<Person>& persons){
 }
 
 std::vector<Person>::iterator find(std::vector<Person>& persons, Person& person){
-    return std::find_if(persons.begin(), persons.end(), [&](Person &p)->bool{
-        return person.surname == p.surname &&
-        person.name[0] == p.name[0] &&
-        person.patronymic[0] == p.patronymic[0];
-    });
+    if(persons.empty()){
+        return persons.end();
+    }
+    return binary_search(persons, person);
 }
 
 std::vector<Person>::iterator find(std::vector<Person>& persons, std::string& number){
@@ -212,8 +216,30 @@ std::vector<Person>::iterator find(std::vector<Person>& persons, std::string& nu
     });
 }
 
+std::vector<Person>::iterator binary_search(std::vector<Person>& persons, Person& person){
+    int middle, left = 0, right = persons.size() - 1;
+    while(true){
+        middle = (left + right) / 2;
+        if(strcmp(person.surname, persons[middle].surname) < 0){
+            right = middle - 1;
+        }
+        else if(strcmp(person.surname, persons[middle].surname) > 0){
+            left = middle + 1;
+        }
+        else{
+            std::vector<Person>::iterator result = persons.begin() + middle;
+            return result;
+        }
+        
+        if(left > right){
+            return persons.end();
+        }
+    }
+}
+
 void add_person(std::vector<Person>& persons){
     Person person;
+    std::cin.ignore();
     std::string dependent;
     std::cout << "ФИО: ";
     std::cin >> person.surname >> person.name >> person.patronymic;
@@ -230,7 +256,32 @@ void add_person(std::vector<Person>& persons){
     std::cin >> person.salary;
     person.calc_tax();
     persons.push_back(person);
+    quicksort(persons);
 }
+
+void qs(int left, int right, std::vector<Person>& persons){
+    int i = left, j = right;
+    Person x = persons[(left+ right)/2];
+    do{
+        while(strcmp(persons[i].surname, x.surname) < 0) ++i;
+        while(strcmp(x.surname, persons[j].surname) < 0) --j;
+        if(i <=j){
+            Person y = persons[i];
+            persons[i] = persons[j];
+            persons[j] = y;
+            ++i; --j;
+        }
+    }while(i <=j);
+    if(left < j) qs(left, j, persons);
+    if(i < right) qs(i, right, persons);
+}
+
+void quicksort(std::vector<Person>& persons){
+    if(persons.size() > 1){
+        qs(0, persons.size()-1, persons);
+    }
+}
+
 /*########################################################################################*/
 /*########################################################################################*/
 
@@ -258,6 +309,7 @@ void read_file(std::vector<Person>& persons){
             persons.push_back(person);
         }
     }
+    quicksort(persons);
     file.close();
 }
 
