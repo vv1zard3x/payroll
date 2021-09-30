@@ -6,10 +6,8 @@ project(${PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(headers)
-
 add_executable(${PROJECT_NAME}
-	src/main.cpp)
+	main.cpp)
 
 
 #Include(FetchContent)
